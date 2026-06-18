@@ -1,5 +1,5 @@
 import { styles } from './styles';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 
@@ -7,13 +7,14 @@ import { colors } from '@/theme/colors';
 type ProductCardProps = {
   title: string;
   quantity: string;
+  onPress?: () => void;
 }
 
-export function ProductCard({ title, quantity }: ProductCardProps) {
+export function ProductCard({ title, quantity, onPress }: ProductCardProps) {
   
 
   return (
-    <TouchableOpacity style={[styles.card, { borderColor: colors.black }]} activeOpacity={0.7}>
+    <TouchableOpacity onPress={onPress} style={[styles.card, { borderColor: colors.black }]} activeOpacity={0.7}>
       
       <View style={[styles.imageContainer, { borderColor: colors.black }]}>
         <MaterialIcons name="image" size={40} color={colors.black} />

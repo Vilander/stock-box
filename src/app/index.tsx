@@ -1,5 +1,6 @@
 import { styles } from "./_styles";
 import { colors } from "@/theme/colors";
+import { LinearGradient } from "expo-linear-gradient";
 
 import { View } from "react-native";
 import {router} from 'expo-router'
@@ -15,18 +16,22 @@ import { Button } from "@/components/Button";
 export default function Index() {
   return (
     <View style={styles.container}>
-        <View style={{marginBottom:10, gap:15}}>
-            <Header />
-        </View>
-        <Separador color={colors.gray[100]} />
-        <FilterInput />
+        
+          <View>
+            <View style={{ marginBottom: 10, gap: 15 }}>
+                <Header />
+            </View>
+            <Separador color={colors.gray[300]} />
+            <FilterInput />
+          </View>
 
         <View style={styles.cardsRow}>
            <ProductCard 
+            onPress={() => router.navigate("/produto/1")}
              title="Cimento" 
              quantity="50 un." 
            />
-           <ProductCard 
+           <ProductCard
              title="Tijolos" 
              quantity="2000 un." 
            />
@@ -39,7 +44,8 @@ export default function Index() {
              quantity="2000 un." 
            />
         </View>
-        <View style={{padding:24, marginBottom: 32}}>
+
+        <View style={{ padding: 24, marginBottom: 32 }}>
             <Button titulo='Adicionar Produto' onPress={() => router.navigate("/add-produto")}/>
         </View>
     </View>
