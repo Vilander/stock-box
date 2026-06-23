@@ -1,23 +1,59 @@
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
-import { Feather } from '@expo/vector-icons'; 
+import { useState, useCallback } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Alert, Image } from "react-native";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
+import { Feather, MaterialIcons } from '@expo/vector-icons'; 
 import { colors } from "@/theme/colors";
 import { Header } from "@/components/Header";
-import {styles} from '../_styles'
+import { styles } from '../_styles';
+
+import { useProductDatabase, ProductResponse } from "@/database/useProdutos";
 
 export default function ProdutoDetalhes() {
-  const { id } = useLocalSearchParams();
-
-
-  const nomeProduto = "Cimento";
-  const quantidade = 50;
-  const precoUnitario = 35.90;
+  const { id } = useLocalSearchParams<{ id: string }>();
   
-  const precoBruto = precoUnitario * quantidade;
+  const [produto, setProduto] = useState<ProductResponse | null>(null);
+  const [erroNaImagem, setErroNaImagem] = useState(false); 
+  
+  const productDB = useProductDatabase();
 
-  const formatarMoeda = (valor:number) => {
+  useFocusEffect(
+    useCallback(() => {
+      async function carregarProduto() {
+        if (!id) return;
+        
+        try {
+          const dadosProduto = await productDB.show(Number(id));
+          if (dadosProduto) {
+            setProduto(dadosProduto);
+            setErroNaImagem(false); 
+          } else {
+            Alert.alert("Erro", "Produto não encontrado.");
+            router.back();
+          }
+        } catch (error) {
+          console.error(error);
+          Alert.alert("Erro", "Falha ao carregar os detalhes do produto.");
+        }
+      }
+
+      carregarProduto();
+    }, [id])
+  );
+
+  const formatarMoeda = (valor: number) => {
     return valor.toFixed(2).replace('.', ',');
   };
+
+  if (!produto) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Carregando...</Text>
+      </View>
+    );
+  }
+
+  const precoBruto = produto.price * produto.quantity;
+  const temImagem = produto.image && produto.image.trim() !== ""; 
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.white }}>
@@ -33,7 +69,7 @@ export default function ProdutoDetalhes() {
         </TouchableOpacity>
 
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.gray[500] }}>
-          página atual
+          detalhes do produto
         </Text>
 
         <TouchableOpacity onPress={() => console.log("Ir para tela de edição")}>
@@ -50,31 +86,39 @@ export default function ProdutoDetalhes() {
           borderRadius: 20, 
           justifyContent: 'center', 
           alignItems: 'center', 
-          marginBottom: 32 
+          marginBottom: 32,
+          overflow: 'hidden' 
         }}>
-           <Text style={{ color: colors.gray[500], fontSize: 16 }}>
-             imagem do produto
-           </Text>
+           {temImagem && !erroNaImagem ? (
+             <Image 
+               source={{ uri: produto.image }} 
+               style={{ width: '100%', height: '100%' }} 
+               resizeMode="cover" 
+               onError={() => setErroNaImagem(true)} 
+             />
+           ) : (
+             <MaterialIcons name="image" size={80} color={colors.gray[500]} />
+           )}
         </View>
 
         <Text style={{ fontSize: 32, fontWeight: 'bold', color: colors.gray[500], marginBottom: 8 }}>
-          {nomeProduto}
+          {produto.name}
         </Text>
 
         <Text style={{ fontSize: 18, color: colors.gray[500], marginBottom: 4 }}>
-          qntd. estoque: {quantidade}
+          qntd. estoque: {produto.quantity}
         </Text>
 
         <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.gray[500], marginBottom: 4 }}>
-          R$ {formatarMoeda(precoUnitario)}
+          R$ {formatarMoeda(produto.price)}
         </Text>
 
         <Text style={{ fontSize: 16, color: colors.gray[800], marginBottom: 24 }}>
-          R$ {formatarMoeda(precoBruto)}
+          Total em estoque: R$ {formatarMoeda(precoBruto)}
         </Text>
 
         <Text style={{ fontSize: 16, color: colors.gray[500], lineHeight: 24 }}>
-          Mussum Ipsum, cacilds vidis litro abertis. Admodum accumsan disputationi eu sit.
+          {produto.description ? produto.description : "Nenhuma descrição informada."}
         </Text>
         
       </View>
